@@ -4,7 +4,7 @@ import { ref } from 'vue'
 // 定义 Store
 export const useMemberStore = defineStore('member', () => {
   // 会员信息
-  const profile = ref<any>()
+  const profile = ref<any>("默认")
 
   // 保存会员信息，登录时使用
   const setProfile = (val: any) => {
