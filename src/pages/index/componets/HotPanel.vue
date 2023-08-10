@@ -8,7 +8,7 @@
         <text class="title-text">{{item.title}}</text>
         <text class="title-desc">{{item.alt}}</text>
       </view>
-      <navigator hover-class="none" url="/pages/hot/hot" class="cards" :key="index">
+      <navigator hover-class="none" :url="`/pages/hot/hot?type=${item.type}`" class="cards" :key="index">
         <image class="image" mode="aspectFit" v-for="(item2,index) in item.pictures" :key='index' :src="item2"></image>
         <!-- <image class="image" mode="aspectFit" :src="item2"></image> -->
         <!-- <image class="image" mode="aspectFit" :src="item2"></image> -->
