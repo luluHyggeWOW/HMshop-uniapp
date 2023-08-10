@@ -15,7 +15,7 @@
       </view>
     </navigator>
   </view>
-  <view class="loading-text"> 正在加载... </view>
+  <view class="loading-text">{{finish?'到底了...':'正在加载...'}} </view>
 </template>
 <script setup lang="ts">
 //\
@@ -24,17 +24,21 @@ import { getHomeGoodsGuessLikeAPI } from '@/services/home'
 import type { GuessItem } from '@/types/home'
 import type { PageParams } from '@/types/global'
 let guessList = ref<GuessItem[]>([])
-let pageNo = ref(1)
-let pageSize = ref(10)
-let data = reactive<PageParams>({
-  page: pageNo.value,
-  pageSize: pageSize.value,
+let pageParams = reactive<PageParams>({
+  page: 1,
+  pageSize: 10,
 })
+let finish = ref<boolean>(false)
 const getHomeGoodsGuessLikeData = async () => {
-  let res = await getHomeGoodsGuessLikeAPI(data)
-  guessList.value = res.result.items
+  if (finish.value) {
+    return uni.showToast({ icon: 'none', title: '没有数据了' })
+  }
+  let res = await getHomeGoodsGuessLikeAPI(pageParams)
+  guessList.value.push(...res.result.items)
+  if (pageParams.page! < res.result.pages) pageParams.page!++
+  else finish.value = true
 }
-
+defineExpose({ getMore: getHomeGoodsGuessLikeData })
 onMounted(() => {
   getHomeGoodsGuessLikeData()
 })
