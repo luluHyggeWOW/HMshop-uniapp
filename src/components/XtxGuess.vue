@@ -38,7 +38,12 @@ const getHomeGoodsGuessLikeData = async () => {
   if (pageParams.page! < res.result.pages) pageParams.page!++
   else finish.value = true
 }
-defineExpose({ getMore: getHomeGoodsGuessLikeData })
+const resetData = () => {
+  pageParams.page = 1
+  guessList.value = []
+  finish.value = false
+}
+defineExpose({ getMore: getHomeGoodsGuessLikeData, resetData })
 onMounted(() => {
   getHomeGoodsGuessLikeData()
 })
