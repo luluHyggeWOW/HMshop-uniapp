@@ -1,12 +1,10 @@
-
-
 <template>
   <view class="viewport">
     <view class="logo">
       <image src="https://pcapi-xiaotuxian-front-devtest.itheima.net/miniapp/images/logo_icon.png"></image>
     </view>
     <view class="login">
-      <button class="button phone">
+      <button class="button phone" @tap="onGetPhoneNumberSimple">
         <text class="icon icon-phone"></text>
         手机号快捷登录
       </button>
@@ -26,7 +24,43 @@
 </template>
 // src/pages/login/login.vue
 <script setup lang="ts">
-//
+import { onLoad } from '@dcloudio/uni-app'
+import { ref } from 'vue'
+import { postLoginWxMinAPI, postLoginWxMinSimpleAPI } from '@/services/login'
+import { useMemberStore } from '@/stores/modules/member'
+import type { LoginResult } from '@/types/memeber'
+const memberStore = useMemberStore()
+let code = ref('')
+const getCode = async () => {
+  let res = await wx.login()
+  code.value = res.code
+}
+const onGetPhoneNumber: UniHelper.ButtonOnGetphonenumber = async (ev) => {
+  let encryptedData = ev.detail?.encryptedData!
+  let iv = ev.detail?.iv!
+  let res = await postLoginWxMinAPI({
+    code: code.value,
+    encryptedData: encryptedData,
+    iv: iv,
+  })
+}
+const onGetPhoneNumberSimple = async () => {
+  let res = await postLoginWxMinSimpleAPI('15002294399')
+  loginSuccess(res.result)
+}
+const loginSuccess = (profile: LoginResult) => {
+  memberStore.setProfile(profile)
+  uni.showToast({
+    title: '登陆成功',
+    icon: 'success',
+  })
+  setTimeout(() => {
+    uni.switchTab({ url: '/pages/my/my' })
+  }, 500)
+}
+onLoad(() => {
+  getCode()
+})
 </script>
 <script  lang="ts">
 export default {
