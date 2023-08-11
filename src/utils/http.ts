@@ -16,7 +16,6 @@ export const httpInterceptor = {
     if (token) {
       options.header.Authorizetion = token
     }
-    console.log(options);
   }
 }
 interface Data<T> {

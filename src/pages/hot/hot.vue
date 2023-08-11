@@ -2,29 +2,29 @@
   <view class="viewport">
     <!-- 推荐封面图 -->
     <view class="cover">
-      <image
-        src="http://yjy-xiaotuxian-dev.oss-cn-beijing.aliyuncs.com/picture/2021-05-20/84abb5b1-8344-49ae-afc1-9cb932f3d593.jpg">
+      <image :src="bannerPicture">
       </image>
     </view>
     <!-- 推荐选项 -->
     <view class="tabs">
-      <text class="text active">抢先尝鲜</text>
-      <text class="text">新品预告</text>
+      <text v-for="(item,index) in subTypes" :key="item.id" class="text" :class="{active:activeIndex === index}"
+        @tap="activeIndex = index">{{item.title}}</text>
     </view>
     <!-- 推荐列表 -->
-    <scroll-view scroll-y class="scroll-view">
+    <scroll-view @scrolltolower="onScrolltolower" v-show="activeIndex===index" v-for="(item,index) in subTypes"
+      :key="item.id" scroll-y class="scroll-view">
       <view class="goods">
-        <navigator hover-class="none" class="navigator" v-for="goods in 10" :key="goods"
+        <navigator hover-class="none" class="navigator" v-for="goods in item.goodsItems.items" :key="goods.id"
           :url="`/pages/goods/goods?id=`">
-          <image class="thumb" src="https://yanxuan-item.nosdn.127.net/5e7864647286c7447eeee7f0025f8c11.png"></image>
-          <view class="name ellipsis">不含酒精，使用安心爽肤清洁湿巾</view>
+          <image class="thumb" :src="goods.picture"></image>
+          <view class="name ellipsis">{{goods.name}}</view>
           <view class="price">
             <text class="symbol">¥</text>
-            <text class="number">29.90</text>
+            <text class="number">{{goods.price}}</text>
           </view>
         </navigator>
       </view>
-      <view class="loading-text">正在加载...</view>
+      <view class="loading-text">{{item.finish?'到底了...':'正在加载...'}}}</view>
     </scroll-view>
   </view>
 </template>
@@ -34,6 +34,7 @@ import { ref } from 'vue'
 import { getHotRecommendAPI } from '@/services/hot'
 import type { HotItem } from '@/types/home'
 import { onLoad } from '@dcloudio/uni-app'
+import type { SubTypeItem } from '@/types/hot'
 // 热门推荐页 标题和url
 const hotMap = [
   { type: '1', title: '特惠推荐', url: '/hot/preference' },
@@ -44,12 +45,33 @@ const hotMap = [
 const props = defineProps<{
   type: string
 }>()
-const
+const bannerPicture = ref<string>('')
+const subTypes = ref<(SubTypeItem & { finish?: boolean })[]>([])
 const currUrlMap = hotMap.find((e) => e.type === props.type)
+let activeIndex = ref<number>(0)
 uni.setNavigationBarTitle({ title: currUrlMap!.title })
 const getHotRecommendData = async () => {
-  let res = await getHotRecommendAPI(currUrlMap!.url)
-  console.log(res)
+  let res = await getHotRecommendAPI(currUrlMap!.url, {
+    page: import.meta.env.DEV ? 30 : 1,
+    pageSize: 10,
+  })
+  bannerPicture.value = res.result.bannerPicture
+  subTypes.value = res.result.subTypes
+}
+const onScrolltolower = async () => {
+  let currsubTypes = subTypes.value[activeIndex.value]
+  if (currsubTypes.goodsItems.page < currsubTypes.goodsItems.pages) currsubTypes.goodsItems.page++
+  else {
+    currsubTypes.finish = true
+    return uni.showToast({ icon: 'error', title: '没有数据了' })
+  }
+  let res = await getHotRecommendAPI(currUrlMap!.url, {
+    subType: currsubTypes.id,
+    page: currsubTypes.goodsItems.page,
+    pageSize: currsubTypes.goodsItems.pageSize,
+  })
+  let newsubTypes = res.result.subTypes[activeIndex.value]
+  currsubTypes.goodsItems.items.push(...newsubTypes.goodsItems.items)
 }
 onLoad(() => {
   getHotRecommendData()
