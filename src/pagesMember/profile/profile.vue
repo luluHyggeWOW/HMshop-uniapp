@@ -26,7 +26,7 @@
         </view>
         <view class="form-item">
           <text class="label">性别</text>
-          <radio-group>
+          <radio-group @change="onGenderChange">
             <label class="radio">
               <radio value="男" color="#27ba9b" :checked="profile?.gender==='男'" />
               男
@@ -39,14 +39,15 @@
         </view>
         <view class="form-item">
           <text class="label">生日</text>
-          <picker class="picker" mode="date" start="1900-01-01" :end="new Date()" :value="profile.birthday">
+          <picker @change="onBirthdayChange" class="picker" mode="date" start="1900-01-01" :end="new Date()"
+            :value="profile.birthday">
             <view v-if="profile.birthday">{{profile?.birthday}}</view>
             <view class="placeholder" v-else>请选择日期</view>
           </picker>
         </view>
         <view class="form-item">
           <text class="label">城市</text>
-          <picker class="picker" mode="region" :value="profile.fullLocation.split(' ')">
+          <picker @change="onFullLocationChange" class="picker" mode="region" :value="profile.fullLocation.split(' ')">
             <view v-if="profile.fullLocation">{{profile?.fullLocation}}</view>
             <view class="placeholder" v-else>请选择城市</view>
           </picker>
@@ -65,10 +66,11 @@
 import { ref } from 'vue'
 import { useMemberStore } from '@/stores/modules/member'
 import { getMemberProfileAPI, putMemberProfileAPI } from '@/services/profile'
-import type { ProfileDetail } from '@/types/memeber'
+import type { Gender, ProfileDetail } from '@/types/memeber'
 import { onLoad } from '@dcloudio/uni-app'
 const memberStore = useMemberStore()
 let profile = ref<ProfileDetail>({} as ProfileDetail)
+let fullLocationCode: [string, string, string] = ['', '', '']
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 const getMemberProfileData = async () => {
@@ -89,6 +91,7 @@ const onAvatarChange = () => {
           if (success.statusCode == 200) {
             let avatar = JSON.parse(success.data).result.avatar
             profile.value!.avatar = avatar
+            memberStore.profile!.avatar = avatar
             uni.showToast({
               title: '更新成功',
               icon: 'success',
@@ -105,12 +108,33 @@ const onAvatarChange = () => {
   })
 }
 const onSubmit = async () => {
-  let res = await putMemberProfileAPI({ nickname: profile.value.nickname })
+  const { nickname, gender, birthday } = profile.value
+  let res = await putMemberProfileAPI({
+    nickname,
+    gender,
+    birthday,
+    provinceCode: fullLocationCode[0],
+    cityCode: fullLocationCode[1],
+    countyCode: fullLocationCode[2],
+  })
+  memberStore.profile!.nickname = res.result.nickname
   uni.showToast({
     title: '保存成功',
     icon: 'success',
     mask: true,
   })
+  uni.navigateBack()
+  // getMemberProfileData()
+}
+const onGenderChange: UniHelper.RadioGroupOnChange = (ev) => {
+  profile.value.gender = ev.detail.value as Gender
+}
+const onBirthdayChange: UniHelper.DatePickerOnChange = (ev) => {
+  profile.value.birthday = ev.detail.value
+}
+const onFullLocationChange: UniHelper.RegionPickerOnChange = (ev) => {
+  profile.value.fullLocation = ev.detail.value.join(' ')
+  fullLocationCode = ev.detail.code!
 }
 onLoad(() => {
   getMemberProfileData()
