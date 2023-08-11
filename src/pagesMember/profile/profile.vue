@@ -22,7 +22,7 @@
         </view>
         <view class="form-item">
           <text class="label">昵称</text>
-          <input class="input" type="text" placeholder="请填写昵称" :value="profile?.nickname" />
+          <input class="input" type="text" placeholder="请填写昵称" v-model="profile.nickname" />
         </view>
         <view class="form-item">
           <text class="label">性别</text>
@@ -39,7 +39,7 @@
         </view>
         <view class="form-item">
           <text class="label">生日</text>
-          <picker class="picker" mode="date" start="1900-01-01" :end="new Date()" :value="profile?.birthday">
+          <picker class="picker" mode="date" start="1900-01-01" :end="new Date()" :value="profile.birthday">
             <view v-if="profile.birthday">{{profile?.birthday}}</view>
             <view class="placeholder" v-else>请选择日期</view>
           </picker>
@@ -57,18 +57,18 @@
         </view>
       </view>
       <!-- 提交按钮 -->
-      <button class="form-button">保 存</button>
+      <button class="form-button" @tap="onSubmit">保 存</button>
     </view>
   </view>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useMemberStore } from '@/stores/modules/member'
-import { getMemberProfileAPI } from '@/services/profile'
+import { getMemberProfileAPI, putMemberProfileAPI } from '@/services/profile'
 import type { ProfileDetail } from '@/types/memeber'
 import { onLoad } from '@dcloudio/uni-app'
 const memberStore = useMemberStore()
-let profile = ref<ProfileDetail>()
+let profile = ref<ProfileDetail>({} as ProfileDetail)
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 const getMemberProfileData = async () => {
@@ -102,6 +102,14 @@ const onAvatarChange = () => {
         },
       })
     },
+  })
+}
+const onSubmit = async () => {
+  let res = await putMemberProfileAPI({ nickname: profile.value.nickname })
+  uni.showToast({
+    title: '保存成功',
+    icon: 'success',
+    mask: true,
   })
 }
 onLoad(() => {
