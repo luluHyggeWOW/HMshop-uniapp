@@ -22,6 +22,8 @@
     {
       "path": "pages/my/my",
       "style": {
+        "navigationStyle": "custom",
+        "navigationBarTextStyle": "white",
         "navigationBarTitleText": "我的"
       }
     },
@@ -94,5 +96,30 @@
         "selectedIconPath": "static/tabs/user_selected.png"
       }
     ]
-  }
+  },
+  // 分包
+  "subPackages": [
+    {
+      "root": "pagesMember",
+      "pages": [
+        {
+          "path": "settings/settings",
+          "style": {
+            "navigationBarTitleText": "设置"
+          }
+        }
+      ]
+    }
+  ],
+  // 分包预下载
+  "preloadRule": {
+    // [!code ++]
+    "pages/my/my": {
+      // [!code ++]
+      "network": "all", // [!code ++]
+      "packages": [
+        "pagesMember"
+      ] // [!code ++]
+    } // [!code ++]
+  } // [!code ++]
 }
