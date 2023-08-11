@@ -1,7 +1,7 @@
 // src/types/member.d.ts
 
 /** 小程序登录 登录用户信息 */
-export type LoginResult = {
+type BaseProfile = {
   /** 用户ID */
   id: number
   /** 头像  */
@@ -10,8 +10,24 @@ export type LoginResult = {
   account: string
   /** 昵称 */
   nickname?: string
+}
+export type LoginResult = BaseProfile & {
   /** 手机号 */
   mobile: string
   /** 登录凭证 */
   token: string
 }
+/** 个人信息 用户详情信息 */
+export type ProfileDetail = BaseProfile & {
+
+  /** 性别 */
+  gender?: Gender
+  /** 生日 */
+  birthday?: string
+  /** 省市区 */
+  fullLocation?: string
+  /** 职业 */
+  profession?: string
+}
+/** 性别 */
+export type Gender = '女' | '男'
