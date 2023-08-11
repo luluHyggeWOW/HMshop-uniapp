@@ -32,11 +32,11 @@
           <text class="label">选择</text>
           <text class="text ellipsis"> 请选择商品规格 </text>
         </view>
-        <view class="item arrow">
+        <view @tap="openPopup('address')" class="item arrow">
           <text class="label">送至</text>
           <text class="text ellipsis"> 请选择收获地址 </text>
         </view>
-        <view class="item arrow">
+        <view @tap="openPopup('service')" class="item arrow">
           <text class="label">服务</text>
           <text class="text ellipsis"> 无忧退 快速退款 免费包邮 </text>
         </view>
@@ -96,6 +96,13 @@
       <view class="buynow"> 立即购买 </view>
     </view>
   </view>
+  <uni-popup ref="popup" type="bottom" background-color="#fff">
+    <AddressPanel v-if="popupName== 'address'" @close="popup?.close()" />
+    <ServicePanel v-if="popupName== 'service'" @close="popup?.close()" />
+    <view class="">
+      <button @tap="popup.close()"></button>
+    </view>
+  </uni-popup>
 </template>
 <script setup lang="ts">
 // 获取屏幕边界到安全区域距离
@@ -103,6 +110,8 @@ import { getGoodsByIdAPI } from '@/services/goods'
 import type { GoodsResult } from '@/types/goods'
 import { onLoad } from '@dcloudio/uni-app'
 import { ref } from 'vue'
+import AddressPanel from './componets/AddressPanel.vue'
+import ServicePanel from './componets/ServicePanel.vue'
 const { safeAreaInsets } = uni.getSystemInfoSync()
 const props = defineProps<{
   id: string
@@ -110,6 +119,12 @@ const props = defineProps<{
 let goods = ref<GoodsResult>()
 let activeIndex = ref<number>(1)
 let isFinish = ref<boolean>(false)
+let popup = ref<{
+  open: (type?: UniHelper.UniPopupType) => void
+  close: () => void
+}>()
+let popupName = ref<'address' | 'service'>()
+
 const getGoodsByIdData = async () => {
   let res = await getGoodsByIdAPI(props.id)
   goods.value = res.result
@@ -125,6 +140,11 @@ const onTapImage = (url: string) => {
     // fail: (error) => {},
   })
 }
+const openPopup = (name: typeof popupName.value) => {
+  popupName.value = name
+  popup.value?.open()
+}
+
 onLoad(async () => {
   await Promise.all([getGoodsByIdData()])
   isFinish.value = true
