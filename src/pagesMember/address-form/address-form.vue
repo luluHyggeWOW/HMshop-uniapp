@@ -1,31 +1,31 @@
 <template>
   <view class="content">
-    <form>
+    <uni-forms :rules="rules" :model="form" ref="formRef">
       <!-- 表单内容 -->
-      <view class="form-item">
+      <uni-forms-item name="receiver" class="form-item">
         <text class="label">收货人</text>
         <input class="input" placeholder="请填写收货人姓名" v-model="form.receiver" />
-      </view>
-      <view class="form-item">
+      </uni-forms-item>
+      <uni-forms-item name="contact" class="form-item">
         <text class="label">手机号码</text>
         <input class="input" placeholder="请填写收货人手机号码" v-model="form.contact" />
-      </view>
-      <view class="form-item">
+      </uni-forms-item>
+      <uni-forms-item name="fullLocation" class="form-item">
         <text class="label">所在地区</text>
         <picker @change="onRegionChange" class="picker" mode="region" :value="form.fullLocation.split(' ')">
           <view v-if="form.fullLocation">{{form.fullLocation}}</view>
           <view v-else class="placeholder">请选择省/市/区(县)</view>
         </picker>
-      </view>
-      <view class="form-item">
+      </uni-forms-item>
+      <uni-forms-item name="address" class="form-item">
         <text class="label">详细地址</text>
         <input class="input" placeholder="街道、楼牌号等信息" v-model="form.address" />
-      </view>
-      <view class="form-item">
+      </uni-forms-item>
+      <uni-forms-item class="form-item">
         <label class="label">设为默认地址</label>
         <switch @change="onSwitchChange" class="switch" color="#27ba9b" :checked="form.isDefault === 1" />
-      </view>
-    </form>
+      </uni-forms-item>
+    </uni-forms>
   </view>
   <!-- 提交按钮 -->
   <button @tap="onSubmit" class="button">保存并使用</button>
@@ -49,6 +49,7 @@ const form = ref({
   address: '', // 详细地址
   isDefault: 0, // 默认地址，1为是，0为否
 })
+let formRef = ref<UniHelper.UniFormsInstance>()
 const props = defineProps<{ id: string }>()
 uni.setNavigationBarTitle({ title: props.id ? '修改地址' : '新建地址' })
 const onRegionChange: UniHelper.RegionPickerOnChange = (ev) => {
@@ -64,21 +65,43 @@ const onSwitchChange: UniHelper.SwitchOnChange = (ev) => {
   form.value.isDefault = ev.detail.value ? 1 : 0
 }
 const onSubmit = async () => {
-  if (props.id) {
-    await putMemberAddressByIdAPI(props.id, form.value)
-  } else {
-    await postMemberAddressAPI(form.value)
+  try {
+    await formRef.value?.validate?.()
+    if (props.id) {
+      await putMemberAddressByIdAPI(props.id, form.value)
+    } else {
+      await postMemberAddressAPI(form.value)
+    }
+    uni.showToast({ icon: 'success', title: props.id ? '修改成功' : '添加成功' })
+    setTimeout(() => {
+      uni.navigateBack()
+    }, 500)
+  } catch (error) {
+    uni.showToast({ icon: 'error', title: '请填写正确信息' })
   }
-  uni.showToast({ icon: 'success', title: props.id ? '修改成功' : '添加成功' })
-  setTimeout(() => {
-    uni.navigateBack()
-  }, 500)
 }
 const getMemberAddressByIdData = async () => {
   if (props.id) {
     let res = await getMemberAddressByIdAPI(props.id)
     Object.assign(form.value, res.result)
   }
+}
+const rules: UniHelper.UniFormsRules = {
+  receiver: {
+    rules: [{ required: true, errorMessage: '请输入收货人姓名' }],
+  }, // 收货人
+  contact: {
+    rules: [
+      { required: true, errorMessage: '请输入联系方式' },
+      { pattern: /^1[3-9]\d{9}$/, errorMessage: '请输入正确的联系方式' },
+    ],
+  }, // 收货人 // 联系方式
+  fullLocation: {
+    rules: [{ required: true, errorMessage: '请输入联系方式' }],
+  }, // 收货 // 省市区(前端展示)
+  address: {
+    rules: [{ required: true, errorMessage: '请输入联系方式' }],
+  }, // 详细地址
 }
 onLoad(() => {
   getMemberAddressByIdData()
