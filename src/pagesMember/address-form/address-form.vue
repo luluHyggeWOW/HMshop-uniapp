@@ -32,7 +32,11 @@
 </template>
 <script setup lang="ts">
 import { ref, defineProps } from 'vue'
-import { getMemberAddressByIdAPI, postMemberAddressAPI } from '@/services/address'
+import {
+  getMemberAddressByIdAPI,
+  postMemberAddressAPI,
+  putMemberAddressByIdAPI,
+} from '@/services/address'
 import { onLoad } from '@dcloudio/uni-app'
 // 表单数据
 const form = ref({
@@ -60,8 +64,12 @@ const onSwitchChange: UniHelper.SwitchOnChange = (ev) => {
   form.value.isDefault = ev.detail.value ? 1 : 0
 }
 const onSubmit = async () => {
-  await postMemberAddressAPI(form.value)
-  uni.showToast({ icon: 'success', title: '添加成功' })
+  if (props.id) {
+    await putMemberAddressByIdAPI(props.id, form.value)
+  } else {
+    await postMemberAddressAPI(form.value)
+  }
+  uni.showToast({ icon: 'success', title: props.id ? '修改成功' : '添加成功' })
   setTimeout(() => {
     uni.navigateBack()
   }, 500)
