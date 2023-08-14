@@ -16,7 +16,7 @@
             <!-- 商品信息 -->
             <view class="goods">
               <!-- 选中状态 -->
-              <text class="checkbox" :class="{ checked: item.selected }"></text>
+              <text @tap="onChangeSelected(item)" class="checkbox" :class="{ checked: item.selected }"></text>
               <navigator :url="`/pages/goods/goods?id=${item.id}`" hover-class="none" class="navigator">
                 <image mode="aspectFill" class="picture" :src="item.picture"></image>
                 <view class="meta">
@@ -51,12 +51,12 @@
       </view>
       <!-- 吸底工具栏 -->
       <view class="toolbar">
-        <text class="all" :class="{ checked: true }">全选</text>
+        <text @tap="onChangeSelectedAll" class="all" :class="{ checked: isSelectedAll }">全选</text>
         <text class="text">合计:</text>
-        <text class="amount">100</text>
+        <text class="amount">{{selectedCartListMoney }}</text>
         <view class="button-grounp">
-          <view class="button payment-button" :class="{ disabled: true }">
-            去结算(10)
+          <view class="button payment-button" :class="{ disabled: selectedCartListCount===0 }">
+            去结算({{selectedCartListCount}})
           </view>
         </view>
       </view>
@@ -75,11 +75,16 @@
   </scroll-view>
 </template>
 <script setup lang="ts">
-import { deleteMemberCartAPI, getMemberCartAPI, putMemberCartBySkuIdAPI } from '@/services/cart'
+import {
+  deleteMemberCartAPI,
+  getMemberCartAPI,
+  putMemberCartBySkuIdAPI,
+  putMemberCartSelectedAPI,
+} from '@/services/cart'
 import { useMemberStore } from '@/stores/modules/member'
 import type { CartItem } from '@/types/cart'
 import { onShow } from '@dcloudio/uni-app'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { InputNumberBoxEvent } from '@/components/vk-data-input-number-box/vk-data-input-number-box'
 const memberStore = useMemberStore()
 let cartList = ref<CartItem[]>()
@@ -101,6 +106,38 @@ const onDeleteCart = (skuId: string) => {
 }
 const onChangeCount = async (ev: InputNumberBoxEvent) => {
   await putMemberCartBySkuIdAPI(ev.index, { count: ev.value })
+}
+const onChangeSelected = async (item: CartItem) => {
+  item.selected = !item.selected
+  await putMemberCartBySkuIdAPI(item.skuId, { selected: item.selected })
+}
+const isSelectedAll = computed(() => {
+  return cartList.value?.length && cartList.value?.every((v) => v.selected)
+})
+const onChangeSelectedAll = async () => {
+  const _isSelectedAll = !isSelectedAll.value
+  cartList.value?.forEach((item) => {
+    item.selected = _isSelectedAll
+  })
+  await putMemberCartSelectedAPI({ selected: _isSelectedAll })
+}
+const selectedCartList = computed(() => {
+  return cartList.value?.filter((v) => v.selected)
+})
+const selectedCartListCount = computed(() => {
+  return selectedCartList.value?.reduce((sum, item) => sum + item.count, 0)
+})
+const selectedCartListMoney = computed(() => {
+  return selectedCartList.value?.reduce((sum, item) => sum + item.count * item.price, 0).toFixed(2)
+})
+const gotoPayment = () => {
+  if (selectedCartListCount.value === 0) {
+    uni.showToast({
+      title: '请选择商品',
+      icon: 'none',
+    })
+  } else {
+  }
 }
 onShow(() => {
   if (memberStore.profile) getMemberCartData()
