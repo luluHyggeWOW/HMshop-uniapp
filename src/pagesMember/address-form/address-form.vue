@@ -32,7 +32,8 @@
 </template>
 <script setup lang="ts">
 import { ref, defineProps } from 'vue'
-import { postMemberAddressAPI } from '@/services/address'
+import { getMemberAddressByIdAPI, postMemberAddressAPI } from '@/services/address'
+import { onLoad } from '@dcloudio/uni-app'
 // 表单数据
 const form = ref({
   receiver: '', // 收货人
@@ -65,6 +66,15 @@ const onSubmit = async () => {
     uni.navigateBack()
   }, 500)
 }
+const getMemberAddressByIdData = async () => {
+  if (props.id) {
+    let res = await getMemberAddressByIdAPI(props.id)
+    Object.assign(form.value, res.result)
+  }
+}
+onLoad(() => {
+  getMemberAddressByIdData()
+})
 </script>
 
 <style lang="scss">
