@@ -13,7 +13,7 @@
       <!-- 订单状态 -->
       <view class="overview" :style="{ paddingTop: safeAreaInsets.top + 20 + 'px' }">
         <!-- 待付款状态:展示去支付按钮和倒计时 -->
-        <template v-if="true">
+        <template v-if="order?.orderState === OrderState.DaiFuKuan">
           <view class="status icon-clock">等待付款</view>
           <view class="tips">
             <text class="money">应付金额: ¥ 99.00</text>
@@ -25,7 +25,7 @@
         <!-- 其他订单状态:展示再次购买按钮 -->
         <template v-else>
           <!-- 订单状态文字 -->
-          <view class="status"> 待付款 </view>
+          <view class="status"> {{orderStateList[order?.orderState]?.text}} </view>
           <view class="button-group">
             <navigator class="button" :url="`/pagesOrder/create/create?orderId=${query.id}`" hover-class="none">
               再次购买
@@ -154,9 +154,11 @@
 </template>
 <script setup lang="ts">
 // import { useGuessList } from '@/composables'
-import { onReady } from '@dcloudio/uni-app'
+import { getMemberOrderByIdAPI } from '@/services/order'
+import { onLoad, onReady } from '@dcloudio/uni-app'
 import { ref } from 'vue'
-
+import { OrderState, orderStateList } from '@/services/constants'
+import PageSkeleton from './componets/PageSkeleton.vue'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 console.log(safeAreaInsets)
@@ -178,7 +180,7 @@ const reasonList = ref([
 const reason = ref('')
 let pages = getCurrentPages()
 let pageInstance = pages.at(-1) as any
-
+let order = ref()
 // 复制内容
 const onCopy = (id: string) => {
   // 设置系统剪贴板的内容
@@ -188,6 +190,15 @@ const onCopy = (id: string) => {
 const query = defineProps<{
   id: string
 }>()
+const getMemberOrderByIdData = async () => {
+  // console.log(props)
+
+  let res = await getMemberOrderByIdAPI(query.id)
+  order.value = res.result
+}
+onLoad(() => {
+  getMemberOrderByIdData()
+})
 onReady(() => {
   // 动画效果,导航栏背景色
   pageInstance.animate(
