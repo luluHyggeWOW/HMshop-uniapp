@@ -40,7 +40,7 @@ import type { AddressItem } from '@/types/address'
 import { onShow } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { useAddressStore } from '@/stores/modules/address'
-let addressList = ref<AddressItem[]>()
+let addressList = ref<AddressItem[]>([])
 const getaddressList = async () => {
   let res = await getMemberAddressAPI()
   addressList.value = res.result

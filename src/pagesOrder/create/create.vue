@@ -60,12 +60,12 @@
     <view class="total-pay symbol">
       <text class="number">{{orderPre?.summary?.totalPayPrice.toFixed(2)}}</text>
     </view>
-    <view class="button" :class="{ disabled: true }"> 提交订单 </view>
+    <view class="button" :class="{ disabled: !selectAddress?.id }" @tap="onOrderSubmit"> 提交订单 </view>
   </view>
 </template>
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { getMemberOrderPreAPI } from '@/services/order'
+import { getMemberOrderPreAPI, getMemberOrderPreNowAPI, postMemberOrderAPI } from '@/services/order'
 import type { OrderPreResult } from '@/types/order'
 import { onLoad } from '@dcloudio/uni-app'
 import { useAddressStore } from '@/stores/modules/address'
@@ -90,12 +90,35 @@ const onChangeDelivery: UniHelper.SelectorPickerOnChange = (ev) => {
   activeIndex.value = ev.detail.value
 }
 const getMemberOrderPreData = async () => {
-  let res = await getMemberOrderPreAPI()
-  orderPre.value = res.result
+  if (props.count && props.skuId) {
+    let res = await getMemberOrderPreNowAPI({ skuId: props.skuId, count: props.count })
+    orderPre.value = res.result
+  } else {
+    let res = await getMemberOrderPreAPI()
+    orderPre.value = res.result
+  }
 }
 const selectAddress = computed(() => {
   return addressStore.selectedAddress || orderPre.value?.userAddresses.find((v) => v.isDefault)
 })
+const props = defineProps<{
+  skuId?: string
+  count?: string
+}>()
+const onOrderSubmit = async () => {
+  if (!selectAddress.value?.id) {
+    return uni.showToast({ icon: 'none', title: '请选择收货地址' })
+  }
+  let res = await postMemberOrderAPI({
+    addressId: selectAddress.value!.id,
+    buyerMessage: buyerMessage.value,
+    deliveryTimeType: activeDelivery.value.type,
+    goods: orderPre.value!.goods.map((v) => ({ count: v.count, skuId: v.skuId })),
+    payChannel: 2,
+    payType: 1,
+  })
+  uni.redirectTo({ url: `/pagesOrder/detail/detail?id=${res.result.id}` })
+}
 onLoad(() => {
   getMemberOrderPreData()
 })

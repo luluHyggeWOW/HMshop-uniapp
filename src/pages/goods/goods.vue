@@ -1,7 +1,7 @@
 <template>
   <vk-data-goods-sku-popup v-model="isShowSku" :localdata="localdata" :mode="mode" add-cart-background-color="#FFA868"
     buy-now-background-color="#27BA9B" ref="skuPopupRef" :active-style="{color:'#27BA9B',backgroundColor:'#E9F8F5',borderColor:'#27BA9B'
-      }" @add-cart="onAddCart" />
+      }" @add-cart="onAddCart" @buy-now="onBuyNow" />
   <scroll-view v-if="isFinish" scroll-y class="viewport">
     <!-- 基本信息 -->
     <view class="goods">
@@ -195,6 +195,9 @@ const onAddCart = async (ev: SkuPopupEvent) => {
   await postMemberCartAPI({ skuId: ev._id, count: ev.buy_num })
   uni.showToast({ icon: 'success', title: '添加成功' })
   isShowSku.value = false
+}
+const onBuyNow = async (ev: SkuPopupEvent) => {
+  uni.navigateTo({ url: `/pagesOrder/create/create?skuId=${ev._id}&count=${ev.buy_num}` })
 }
 onLoad(async () => {
   await Promise.all([getGoodsByIdData()])
