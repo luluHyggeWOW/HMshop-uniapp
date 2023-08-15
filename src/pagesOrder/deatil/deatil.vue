@@ -18,7 +18,8 @@
           <view class="tips">
             <text class="money">应付金额: ¥ 99.00</text>
             <text class="time">支付剩余</text>
-            00 时 29 分 59 秒
+            <uni-countdown :second="order.countdown" @timeup="onTimeup" :show-day="false" splitor-color="#fff"
+              :show-icon="false" color="#fff" />
           </view>
           <view class="button">去支付</view>
         </template>
@@ -195,6 +196,9 @@ const getMemberOrderByIdData = async () => {
 
   let res = await getMemberOrderByIdAPI(query.id)
   order.value = res.result
+}
+const onTimeup = () => {
+  order.value!.orderState = OrderState.YiQuXiao
 }
 onLoad(() => {
   getMemberOrderByIdData()

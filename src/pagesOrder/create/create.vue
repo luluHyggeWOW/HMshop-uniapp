@@ -117,7 +117,7 @@ const onOrderSubmit = async () => {
     payChannel: 2,
     payType: 1,
   })
-  uni.redirectTo({ url: `/pagesOrder/detail/detail?id=${res.result.id}` })
+  uni.redirectTo({ url: `/pagesOrder/deatil/deatil?id=${res.result.id}` })
 }
 onLoad(() => {
   getMemberOrderPreData()
