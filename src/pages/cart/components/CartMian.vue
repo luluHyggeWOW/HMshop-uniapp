@@ -54,7 +54,7 @@
         <text @tap="onChangeSelectedAll" class="all" :class="{ checked: isSelectedAll }">全选</text>
         <text class="text">合计:</text>
         <text class="amount">{{selectedCartListMoney }}</text>
-        <view class="button-grounp">
+        <view class="button-grounp" @tap="gotoPayment">
           <view class="button payment-button" :class="{ disabled: selectedCartListCount===0 }">
             去结算({{selectedCartListCount}})
           </view>
@@ -136,8 +136,8 @@ const gotoPayment = () => {
       title: '请选择商品',
       icon: 'none',
     })
-  } else {
   }
+  uni.navigateTo({ url: '/pagesOrder/create/create' })
 }
 onShow(() => {
   if (memberStore.profile) getMemberCartData()
