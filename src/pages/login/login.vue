@@ -4,10 +4,17 @@
       <image src="https://pcapi-xiaotuxian-front-devtest.itheima.net/miniapp/images/logo_icon.png"></image>
     </view>
     <view class="login">
+      <!-- #ifdef H5 -->
+      <input class="input" type="text" placeholder=" 请输入用户名/手机号码">
+      <input class="input" type="text" password placeholder="请输入密码">
+      <button class="button phone">登录</button>
+      <!-- #endif -->
+      <!--#ifdef MP-WEIXIN-->
       <button class="button phone" @tap="onGetPhoneNumberSimple">
         <text class="icon icon-phone"></text>
         手机号快捷登录
       </button>
+      <!--#endif-->
       <view class="extra">
         <view class="caption">
           <text>其他登录方式</text>
@@ -96,6 +103,15 @@ page {
   height: 60vh;
   padding: 40rpx 20rpx 20rpx;
 
+  .input {
+    width: 100%;
+    height: 80rpx;
+    font-size: 28rpx;
+    border-radius: 72rpx;
+    border: 1px solid #ddd;
+    padding-left: 30rpx;
+    margin-bottom: 20rpx;
+  }
   .button {
     display: flex;
     align-items: center;
