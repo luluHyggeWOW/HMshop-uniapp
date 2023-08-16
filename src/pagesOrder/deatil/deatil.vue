@@ -32,7 +32,8 @@
               再次购买
             </navigator>
             <!-- 待发货状态：模拟发货,开发期间使用,用于修改订单状态为已发货 -->
-            <view v-if="false" class="button"> 模拟发货 </view>
+            <view v-if="isDev && order?.orderState == OrderState.DaiFaHuo" @tap="onOrderSend" class="button"> 模拟发货
+            </view>
           </view>
         </template>
       </view>
@@ -155,7 +156,7 @@
 </template>
 <script setup lang="ts">
 // import { useGuessList } from '@/composables'
-import { getMemberOrderByIdAPI } from '@/services/order'
+import { getMemberOrderByIdAPI, getMemberOrderConsignmentByIdAPI } from '@/services/order'
 import { onLoad, onReady } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { OrderState, orderStateList } from '@/services/constants'
@@ -181,6 +182,7 @@ const reason = ref('')
 let pages = getCurrentPages()
 let pageInstance = pages.at(-1) as any
 let order = ref()
+let isDev = import.meta.env.DEV
 // 复制内容
 const onCopy = (id: string) => {
   // 设置系统剪贴板的内容
@@ -192,15 +194,15 @@ const query = defineProps<{
 }>()
 const getMemberOrderByIdData = async () => {
   // console.log(props)
-
   let res = await getMemberOrderByIdAPI(query.id)
   order.value = res.result
+  console.log(order.value)
 }
 const onTimeup = () => {
   order.value!.orderState = OrderState.YiQuXiao
 }
 const onOrderPay = async () => {
-  if (import.meta.env.DEV) {
+  if (isDev) {
     await getPayMockAPI({ orderId: query.id })
   } else {
     let res = await getPayWxMiniPayAPI({ orderId: query.id })
@@ -209,6 +211,15 @@ const onOrderPay = async () => {
 
   uni.redirectTo({ url: `/pagesOrder/payment/payment?id=${query.id}` })
 }
+// 摸你发货
+const onOrderSend = async () => {
+  if (isDev) {
+    await getMemberOrderConsignmentByIdAPI(query.id)
+    uni.showToast({ icon: 'success', title: '模拟发货完成' })
+    order.value!.orderState = OrderState.DaiShouHuo
+  }
+}
+
 onLoad(() => {
   getMemberOrderByIdData()
 })
