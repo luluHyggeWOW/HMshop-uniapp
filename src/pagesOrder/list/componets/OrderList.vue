@@ -31,7 +31,7 @@
       <view class="action">
         <!-- 待付款状态：显示去支付按钮 -->
         <template v-if="order.orderState===OrderState.DaiFuKuan">
-          <view class="button primary">去支付</view>
+          <view class="button primary" @tap="onOrderPay(order.id)">去支付</view>
         </template>
         <template v-else>
           <navigator class="button secondary" :url="`/pagesOrder/create/create?orderId=id`" hover-class="none">
@@ -55,11 +55,13 @@ import { onShow } from '@dcloudio/uni-app'
 import { getMemberOrderAPI } from '@/services/order'
 import type { OrderItem, OrderListParams } from '@/types/order'
 import { OrderState, orderStateList } from '@/services/constants'
+import { getPayMockAPI, getPayWxMiniPayAPI } from '@/services/pay'
 
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 const props = defineProps<{ orderState: number }>()
 let orderList = ref<OrderItem[]>([])
+let isDev = import.meta.env.DEV
 let queryParams: OrderListParams = {
   page: 1,
   pageSize: 10,
@@ -69,7 +71,19 @@ const getMemberOrderData = async () => {
   let res = await getMemberOrderAPI(queryParams)
   orderList.value = res.result.items
 }
-
+// 订单支付
+const onOrderPay = async (id: string) => {
+  if (isDev) {
+    await getPayMockAPI({ orderId: id })
+  } else {
+    let res = await getPayWxMiniPayAPI({ orderId: id })
+    wx.requestPayment(res.result)
+  }
+  uni.showToast({ icon: 'success', title: '支付成功' })
+  let order = orderList.value.find((v) => v.id)
+  order!.orderState = OrderState.DaiFaHuo
+  getMemberOrderData()
+}
 onMounted(() => {
   getMemberOrderData()
 })
