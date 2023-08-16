@@ -21,7 +21,7 @@
             <uni-countdown :second="order.countdown" @timeup="onTimeup" :show-day="false" splitor-color="#fff"
               :show-icon="false" color="#fff" />
           </view>
-          <view class="button">去支付</view>
+          <view class="button" @tap="onOrderPay">去支付</view>
         </template>
         <!-- 其他订单状态:展示再次购买按钮 -->
         <template v-else>
@@ -113,7 +113,7 @@
       <view class="toolbar" :style="{ paddingBottom: safeAreaInsets?.bottom + 'px' }">
         <!-- 待付款状态:展示支付按钮 -->
         <template v-if="true">
-          <view class="button primary"> 去支付 </view>
+          <view class="button primary" @tap="onOrderPay"> 去支付 </view>
           <view class="button" @tap="popup?.open?.()"> 取消订单 </view>
         </template>
         <!-- 其他订单状态:按需展示按钮 -->
@@ -160,10 +160,9 @@ import { onLoad, onReady } from '@dcloudio/uni-app'
 import { ref } from 'vue'
 import { OrderState, orderStateList } from '@/services/constants'
 import PageSkeleton from './componets/PageSkeleton.vue'
+import { getPayWxMiniPayAPI, getPayMockAPI } from '@/services/pay'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
-console.log(safeAreaInsets)
-
 // 猜你喜欢
 // const { guessRef, onScrolltolower } = useGuessList()
 // 弹出层组件
@@ -200,6 +199,16 @@ const getMemberOrderByIdData = async () => {
 const onTimeup = () => {
   order.value!.orderState = OrderState.YiQuXiao
 }
+const onOrderPay = async () => {
+  if (import.meta.env.DEV) {
+    await getPayMockAPI({ orderId: query.id })
+  } else {
+    let res = await getPayWxMiniPayAPI({ orderId: query.id })
+    wx.requestPayment(res.result)
+  }
+
+  uni.redirectTo({ url: `/pagesOrder/payment/payment?id=${query.id}` })
+}
 onLoad(() => {
   getMemberOrderByIdData()
 })
@@ -232,7 +241,6 @@ onReady(() => {
   })
 })
 </script>
-
 
 <style lang="scss">
 page {

@@ -25,7 +25,7 @@ import type { GuessItem } from '@/types/home'
 import type { PageParams } from '@/types/global'
 let guessList = ref<GuessItem[]>([])
 let pageParams = reactive<PageParams>({
-  page: import.meta.env.DEV ? 30 : 1,
+  page: import.meta.env.DEV ? 1 : 1,
   pageSize: 10,
 })
 let finish = ref<boolean>(false)
