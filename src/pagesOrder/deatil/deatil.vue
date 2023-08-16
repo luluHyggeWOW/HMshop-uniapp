@@ -42,16 +42,16 @@
       <!-- 配送状态 -->
       <view class="shipment">
         <!-- 订单物流信息 -->
-        <view v-for="item in 1" :key="item" class="item">
+        <view v-for="item in logisticList" :key="item.id" class="item">
           <view class="message">
-            您已在广州市天河区黑马程序员完成取件，感谢使用菜鸟驿站，期待再次为您服务。
+            {{item.text}}
           </view>
-          <view class="date"> 2023-04-14 13:14:20 </view>
+          <view class="date"> {{item.time}} </view>
         </view>
         <!-- 用户收货地址 -->
         <view class="locate">
-          <view class="user"> 张三 13333333333 </view>
-          <view class="address"> 广东省 广州市 天河区 黑马程序员 </view>
+          <view class="user"> {{order.receiverContact}} {{order.receiverMobile}} </view>
+          <view class="address"> {{order.receiverAddress}} </view>
         </view>
       </view>
 
@@ -161,6 +161,7 @@
 import {
   getMemberOrderByIdAPI,
   getMemberOrderConsignmentByIdAPI,
+  getMemberOrderLogisticsByIdAPI,
   putMemberOrderReceiptByIdAPI,
 } from '@/services/order'
 import { onLoad, onReady } from '@dcloudio/uni-app'
@@ -168,6 +169,7 @@ import { ref } from 'vue'
 import { OrderState, orderStateList } from '@/services/constants'
 import PageSkeleton from './componets/PageSkeleton.vue'
 import { getPayWxMiniPayAPI, getPayMockAPI } from '@/services/pay'
+import type { LogisticItem } from '@/types/order'
 // 获取屏幕边界到安全区域距离
 const { safeAreaInsets } = uni.getSystemInfoSync()
 // 猜你喜欢
@@ -189,6 +191,7 @@ let pages = getCurrentPages()
 let pageInstance = pages.at(-1) as any
 let order = ref()
 let isDev = import.meta.env.DEV
+let logisticList = ref<LogisticItem[]>([])
 // 复制内容
 const onCopy = (id: string) => {
   // 设置系统剪贴板的内容
@@ -198,11 +201,20 @@ const onCopy = (id: string) => {
 const query = defineProps<{
   id: string
 }>()
+// 获取订单信息
 const getMemberOrderByIdData = async () => {
   // console.log(props)
   let res = await getMemberOrderByIdAPI(query.id)
   order.value = res.result
   console.log(order.value)
+
+  if (
+    [OrderState.DaiShouHuo, OrderState.DaiPingJia, OrderState.YiWanCheng].includes(
+      order.value.orderState,
+    )
+  ) {
+    getMemberOrderLogisticsByIdData()
+  }
 }
 const onTimeup = () => {
   order.value!.orderState = OrderState.YiQuXiao
@@ -236,6 +248,11 @@ const onOrderConfirm = async () => {
       }
     },
   })
+}
+// 获取物流信息
+const getMemberOrderLogisticsByIdData = async () => {
+  let res = await getMemberOrderLogisticsByIdAPI(query.id)
+  logisticList.value = res.result.list
 }
 onLoad(() => {
   getMemberOrderByIdData()
